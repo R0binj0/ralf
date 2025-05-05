@@ -1,12 +1,10 @@
 import { WeatherData } from '../services/weatherService';
-import Image from 'next/image';
 interface WeatherDisplayProps {
   weatherData: WeatherData;
 }
 
 export default function WeatherDisplay({ weatherData }: WeatherDisplayProps) {
   const { main, weather, name, sys } = weatherData;
-  const weatherIcon = weather[0].icon;
   const weatherDescription = weather[0].description;
 
   return (
@@ -18,11 +16,6 @@ export default function WeatherDisplay({ weatherData }: WeatherDisplayProps) {
           </h2>
           <p className="text-gray-600 capitalize">{weatherDescription}</p>
         </div>
-        <Image
-          src={`https://openweathermap.org/img/wn/${weatherIcon}@2x.png`}
-          alt={weatherDescription}
-          className="w-20 h-20"
-        />
       </div>
       
       <div className="mt-4">
