@@ -7,6 +7,7 @@ export default function Home() {
       <Link href="/map">Map</Link>
       <Link href="/blog">Blog</Link>
       <Link href="/monsters">Monsters</Link>
+      <Link href="/others">Others</Link>
     </div>
   );
 }
