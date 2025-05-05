@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Monster } from '@/app/services/monsterService';
-
+import Image from 'next/image';
 const Monsters = () => {
   const [monsters, setMonsters] = useState<Monster[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,6 +126,7 @@ const Monsters = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {monsters.map((monster) => (
           <div key={monster.id} className="bg-white rounded-lg shadow-md p-6">
+            <Image src={"/img/" + monster.id + ".png"} alt={monster.title} width={100} height={100} />
             <h2 className="text-xl font-semibold mb-2">{monster.title}</h2>
             <p className="text-gray-600 mb-4">{monster.description}</p>
             <div className="space-y-2">
