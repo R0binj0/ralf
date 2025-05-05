@@ -17,91 +17,89 @@ export default function MapComponent({ markers, onMarkerAdded, onMarkerClick }: 
   const [isAddingMarker, setIsAddingMarker] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Fix for Leaflet marker icons
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-      });
+    // Fix for Leaflet marker icons
+    delete (L.Icon.Default.prototype as { _getIconUrl?: string })._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    });
 
-      const mapInstance = L.map('map').setView([58.3776, 26.7290], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(mapInstance);
+    const mapInstance = L.map('map').setView([58.3776, 26.7290], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(mapInstance);
 
-      const layerGroup = L.layerGroup().addTo(mapInstance);
-      setMap(mapInstance);
-      setMarkerLayer(layerGroup);
+    const layerGroup = L.layerGroup().addTo(mapInstance);
+    setMap(mapInstance);
+    setMarkerLayer(layerGroup);
 
-      return () => {
-        mapInstance.remove();
-      };
-    }
+    return () => {
+      mapInstance.remove();
+    };
   }, []);
 
   useEffect(() => {
-    if (map && markerLayer) {
-      markerLayer.clearLayers();
+    if (!map || !markerLayer) return;
 
-      markers.forEach(marker => {
-        const markerIcon = L.divIcon({
-          className: 'custom-marker',
-          html: `<div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">${markers.indexOf(marker) + 1}</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
-        });
+    markerLayer.clearLayers();
 
-        const mapMarker = L.marker([marker.latitude, marker.longitude], { icon: markerIcon })
-          .addTo(markerLayer)
-          .bindPopup(`
-            <div class="p-2">
-              <h3 class="font-bold">${marker.name}</h3>
-              <p>${marker.description}</p>
-              <button class="mt-2 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600" onclick="window.dispatchEvent(new CustomEvent('markerClick', { detail: '${marker.id}' }))">
-                View Details
-              </button>
-            </div>
-          `);
-
-        mapMarker.on('click', () => {
-          onMarkerClick(marker);
-        });
+    markers.forEach(marker => {
+      const markerIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">${markers.indexOf(marker) + 1}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
       });
-    }
+
+      const mapMarker = L.marker([marker.latitude, marker.longitude], { icon: markerIcon })
+        .addTo(markerLayer)
+        .bindPopup(`
+          <div class="p-2">
+            <h3 class="font-bold">${marker.name}</h3>
+            <p>${marker.description}</p>
+            <button class="mt-2 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600" onclick="window.dispatchEvent(new CustomEvent('markerClick', { detail: '${marker.id}' }))">
+              View Details
+            </button>
+          </div>
+        `);
+
+      mapMarker.on('click', () => {
+        onMarkerClick(marker);
+      });
+    });
   }, [map, markerLayer, markers, onMarkerClick]);
 
   useEffect(() => {
-    if (map && isAddingMarker) {
-      const clickHandler = async (e: L.LeafletMouseEvent) => {
-        const name = prompt('Enter marker name:');
-        if (!name) {
-          setIsAddingMarker(false);
-          return;
-        }
+    if (!map || !isAddingMarker) return;
 
-        const description = prompt('Enter marker description:');
-        if (!description) {
-          setIsAddingMarker(false);
-          return;
-        }
-
-        const newMarker = await createMarker(
-          name,
-          e.latlng.lat,
-          e.latlng.lng,
-          description
-        );
-        onMarkerAdded(newMarker);
+    const clickHandler = async (e: L.LeafletMouseEvent) => {
+      const name = prompt('Enter marker name:');
+      if (!name) {
         setIsAddingMarker(false);
-      };
+        return;
+      }
 
-      map.on('click', clickHandler);
-      return () => {
-        map.off('click', clickHandler);
-      };
-    }
+      const description = prompt('Enter marker description:');
+      if (!description) {
+        setIsAddingMarker(false);
+        return;
+      }
+
+      const newMarker = await createMarker(
+        name,
+        e.latlng.lat,
+        e.latlng.lng,
+        description
+      );
+      onMarkerAdded(newMarker);
+      setIsAddingMarker(false);
+    };
+
+    map.on('click', clickHandler);
+    return () => {
+      map.off('click', clickHandler);
+    };
   }, [map, isAddingMarker, onMarkerAdded]);
 
   return (
